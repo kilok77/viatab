@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: viatab-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: viatab-backend
+  template:
+    metadata:
+      labels:
+        app: viatab-backend
+    spec:
+      containers:
+        - name: backend
+          image: viatab-backend:latest # Ensure this image is built and available
+          imagePullPolicy: IfNotPresent # Use this if you're building images locally
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MONGO_URL
+              value: "mongodb://admin:password@mongodb-service:27017/"

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: viatab-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: viatab-frontend
+  template:
+    metadata:
+      labels:
+        app: viatab-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: viatab-frontend:latest # Ensure this image is built and available
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
