@@ -9,11 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout your repo
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Spin up Minikube inside the runner
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.13.1
         with:
@@ -25,21 +23,20 @@ jobs:
       - name: Enable dynamic storage in Minikube
         run: minikube addons enable default-storageclass
 
-      # 3. Point Docker CLI at Minikube’s Docker daemon
       - name: Point Docker to Minikube
         run: |
           echo "::add-mask::$(minikube -p minikube docker-env)"
           eval $(minikube -p minikube docker-env)
 
-      # 4. Build backend & frontend via your compose file
       - name: Build images via Docker Compose
         run: docker compose -f docker-compose.yml build
 
-      # 6. Apply all your Kubernetes manifests
+      - name: Pre-load MongoDB image # ← optional if you keep imagePullPolicy: Never
+        run: docker pull mongo:latest
+
       - name: Apply Kubernetes manifests
         run: kubectl apply -f k8s/
 
-      # 7. Debug dump pod status & events (optional)
       - name: Debug dump pod status
         run: |
           echo "=== Pods ==="
@@ -47,7 +44,6 @@ jobs:
           echo "=== Pod Events ==="
           kubectl describe pods
 
-      # 8. Wait until your back- and front-end are up
       - name: Wait for rollouts
         run: |
           kubectl rollout status deployment/backend-deployment --timeout=120s
