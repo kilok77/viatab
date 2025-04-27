@@ -22,6 +22,9 @@ jobs:
           driver: docker
           github token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Enable dynamic storage in Minikube
+        run: minikube addons enable default-storageclass
+
       # 3. Point Docker CLI at Minikube’s Docker daemon
       - name: Point Docker to Minikube
         run: |
