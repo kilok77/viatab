@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [backend, frontend]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # --- Backend service ---
+      - name: Set up Python (backend)
+        if: matrix.service == 'backend'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install backend dependencies
+        if: matrix.service == 'backend'
+        run: |
+          pip install -r backend/requirements.txt
+
+      # (If you have tests in backend, run them here)
+      #- name: Run backend tests
+      #  if: matrix.service == 'backend'
+      #  run: pytest backend/tests
+
+      - name: Build backend Docker image
+        if: matrix.service == 'backend'
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: viatab/backend:latest
+
+      # --- Frontend service ---
+      - name: Set up Node.js (frontend)
+        if: matrix.service == 'frontend'
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install frontend dependencies
+        if: matrix.service == 'frontend'
+        run: |
+          cd frontend
+          npm ci
+
+      # (If you have frontend tests, run them here)
+      #- name: Run frontend tests
+      #  if: matrix.service == 'frontend'
+      #  run: npm test --prefix frontend
+
+      - name: Build frontend Docker image
+        if: matrix.service == 'frontend'
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: viatab/frontend:latest

@@ -1,0 +1,44 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Minikube
+        uses: manusa/actions-setup-minikube@v2
+        with:
+          minikube version: v1.30.1
+          driver: docker
+
+      - name: Point Docker to Minikube
+        run: |
+          echo "::add-mask::$(minikube -p minikube docker-env)"
+          eval $(minikube -p minikube docker-env)
+
+      - name: Build & load backend image
+        run: docker build -t viatab/backend:latest -f backend/Dockerfile backend
+
+      - name: Build & load frontend image
+        run: docker build -t viatab/frontend:latest -f frontend/Dockerfile frontend
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/mongodb-pvc.yaml
+          kubectl apply -f k8s/mongodb-deployment.yaml
+          kubectl apply -f k8s/mongodb-service.yaml
+          kubectl apply -f k8s/backend-deployment.yaml
+          kubectl apply -f k8s/backend-service.yaml
+          kubectl apply -f k8s/frontend-deployment.yaml
+          kubectl apply -f k8s/frontend-service.yaml
+
+      - name: Wait for rollouts
+        run: |
+          kubectl rollout status deployment/backend --timeout=120s
+          kubectl rollout status deployment/frontend --timeout=120s

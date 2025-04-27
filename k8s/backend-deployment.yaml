@@ -17,7 +17,7 @@ spec:
       containers:
         - name: backend
           image: viatab-backend:latest # Ensure this image is built and available
-          imagePullPolicy: IfNotPresent # Use this if you're building images locally
+          imagePullPolicy: Never # Use this if you're building images locally
           ports:
             - containerPort: 8000
           env:
