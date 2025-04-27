@@ -40,6 +40,16 @@ jobs:
           kubectl apply -f k8s/frontend-deployment.yaml
           kubectl apply -f k8s/frontend-service.yaml
 
+      - name: Debug: dump pod status
+        run: |
+          echo "=== Pods ==="
+          kubectl get pods -o wide
+          echo "=== Deployment Events ==="
+          kubectl describe deployment backend-deployment
+          echo "=== Backend Logs ==="
+          BACKEND_POD=$(kubectl get pods -l app=backend -o jsonpath='{.items[0].metadata.name}')
+          kubectl logs $BACKEND_POD --tail=20
+
       - name: Wait for rollouts
         run: |
           kubectl rollout status deployment/backend-deployment --timeout=120s
