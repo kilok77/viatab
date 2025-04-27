@@ -32,12 +32,6 @@ jobs:
       - name: Build images via Docker Compose
         run: docker compose -f docker-compose.yml build
 
-      # 5. Retag so Kubernetes sees the right image names
-      - name: Tag images for Kubernetes
-        run: |
-          docker tag viatab_backend:latest viatab/backend:latest
-          docker tag viatab_frontend:latest viatab/frontend:latest
-
       # 6. Apply all your Kubernetes manifests
       - name: Apply Kubernetes manifests
         run: kubectl apply -f k8s/
