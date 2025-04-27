@@ -40,7 +40,7 @@ jobs:
           kubectl apply -f k8s/frontend-deployment.yaml
           kubectl apply -f k8s/frontend-service.yaml
 
-      - name: Debug: dump pod status
+      - name: Debug dump pod status
         run: |
           echo "=== Pods ==="
           kubectl get pods -o wide
