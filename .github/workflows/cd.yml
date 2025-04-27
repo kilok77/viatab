@@ -37,12 +37,52 @@ jobs:
       - name: Apply Kubernetes manifests
         run: kubectl apply -f k8s/
 
-      - name: Debug dump pod status
+      - name: Debug #1: List images in Minikube’s Docker
         run: |
+          echo "=== Docker images (local) ==="
+          docker images
+          echo
+          echo "=== Docker images (minikube) ==="
+          minikube image ls
+
+      - name: Debug #2: Dump Compose config
+        run: |
+          echo "=== Docker Compose final config ==="
+          docker compose -f docker-compose.yml config
+
+      - name: Apply K8s manifests (skip PVC if using emptyDir)
+        run: |
+          # If you’re still using mongodb-pvc.yaml, it’ll recreate that PVC
+          # and keep your old ReplicaSet around. Consider deleting it:
+          # kubectl delete pvc mongodb-pvc || true
+
+          # Or better, remove mongodb-pvc.yaml from k8s/ entirely.
+          kubectl apply -f k8s/
+
+      - name: Debug #3: Cluster resources
+        run: |
+          echo "=== Deployments ==="
+          kubectl get deploy -o wide
+          echo
+          echo "=== ReplicaSets ==="
+          kubectl get rs -o wide
+          echo
           echo "=== Pods ==="
           kubectl get pods -o wide
-          echo "=== Pod Events ==="
-          kubectl describe pods
+          echo
+          echo "=== PVCs ==="
+          kubectl get pvc -o wide
+          echo
+          echo "=== PVs ==="
+          kubectl get pv -o wide
+
+      - name: Debug #4: Inspect MongoDB Deployment spec
+        run: |
+          echo "=== MongoDB Deployment YAML ==="
+          kubectl get deployment mongodb-deployment -o yaml
+          echo
+          echo "=== MongoDB Pod Events ==="
+          kubectl describe pod -l app=viatab-mongodb
 
       - name: Wait for rollouts
         run: |
