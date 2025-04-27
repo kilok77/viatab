@@ -34,8 +34,8 @@ jobs:
           eval $(minikube -p minikube docker-env)
           docker compose -f docker-compose.yml build
 
-      - name: Pre-load MongoDB image
-        run: docker pull mongo:latest
+      # - name: Pre-load MongoDB image
+      #   run: docker pull mongo:latest
 
       - name: Debug #1: List images in Minikube’s Docker
         run: |
@@ -52,10 +52,6 @@ jobs:
 
       - name: Apply Kubernetes manifests
         run: |
-          # Cleanup stale PVC & ReplicaSet
-          kubectl delete pvc mongodb-pvc --ignore-not-found
-          kubectl delete rs -l app=viatab-mongodb --field-selector=status.replicas=0 --ignore-not-found
-          # Deploy resources
           kubectl apply -f k8s/mongodb-deployment.yaml
           kubectl apply -f k8s/mongodb-service.yaml
           kubectl apply -f k8s/backend-deployment.yaml
