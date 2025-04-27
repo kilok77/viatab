@@ -42,5 +42,5 @@ jobs:
 
       - name: Wait for rollouts
         run: |
-          kubectl rollout status deployment/backend --timeout=120s
-          kubectl rollout status deployment/frontend --timeout=120s
+          kubectl rollout status deployment/backend-deployment --timeout=120s
+          kubectl rollout status deployment/frontend-deployment --timeout=120s
