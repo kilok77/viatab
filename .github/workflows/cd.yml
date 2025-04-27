@@ -29,13 +29,13 @@ jobs:
           eval $(minikube -p minikube docker-env)
 
       - name: Build images via Docker Compose
-        run: docker compose -f docker-compose.yml build
+        run: |
+          # Re-point Docker to Minikube in this step
+          eval $(minikube -p minikube docker-env)
+          docker compose -f docker-compose.yml build
 
-      - name: Pre-load MongoDB image # ← optional if you keep imagePullPolicy: Never
+      - name: Pre-load MongoDB image
         run: docker pull mongo:latest
-
-      - name: Apply Kubernetes manifests
-        run: kubectl apply -f k8s/
 
       - name: Debug #1: List images in Minikube’s Docker
         run: |
@@ -50,14 +50,18 @@ jobs:
           echo "=== Docker Compose final config ==="
           docker compose -f docker-compose.yml config
 
-      - name: Apply K8s manifests (skip PVC if using emptyDir)
+      - name: Apply Kubernetes manifests
         run: |
-          # If you’re still using mongodb-pvc.yaml, it’ll recreate that PVC
-          # and keep your old ReplicaSet around. Consider deleting it:
-          # kubectl delete pvc mongodb-pvc || true
-
-          # Or better, remove mongodb-pvc.yaml from k8s/ entirely.
-          kubectl apply -f k8s/
+          # Cleanup stale PVC & ReplicaSet
+          kubectl delete pvc mongodb-pvc --ignore-not-found
+          kubectl delete rs -l app=viatab-mongodb --field-selector=status.replicas=0 --ignore-not-found
+          # Deploy resources
+          kubectl apply -f k8s/mongodb-deployment.yaml
+          kubectl apply -f k8s/mongodb-service.yaml
+          kubectl apply -f k8s/backend-deployment.yaml
+          kubectl apply -f k8s/backend-service.yaml
+          kubectl apply -f k8s/frontend-deployment.yaml
+          kubectl apply -f k8s/frontend-service.yaml
 
       - name: Debug #3: Cluster resources
         run: |
